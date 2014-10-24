@@ -1,0 +1,43 @@
+{
+  "name": "amqp.channel",
+  "version": "0.0.1",
+  "description": "Generalized way to get an AMQP connection/channel setup.",
+  "main": "channel.js",
+  "dependencies": {
+    "amqplib": "^0.2.1",
+    "bluebird": "^2.3.2",
+    "npmlog": "^0.1.1"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "chai-as-promised": "^4.1.1",
+    "istanbul": "^0.3.2",
+    "lodash": "^2.4.1",
+    "mocha": "^2.0.0",
+    "proxyquire": "^1.0.1",
+    "sinon": "^1.10.3",
+    "sinon-chai": "^2.5.0"
+  },
+  "scripts": {
+    "test": "mocha test",
+    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/amqp.channel/index.html"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NGPVAN/amqp.channel.git"
+  },
+  "keywords": [
+    "rabbitmq",
+    "amqp"
+  ],
+  "author": "NGPVAN",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NGPVAN/amqp.channel/issues"
+  },
+  "homepage": "https://github.com/NGPVAN/amqp.channel",
+  "readmeFilename": "README.md"
+}

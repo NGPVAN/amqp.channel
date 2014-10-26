@@ -2,8 +2,7 @@ var log      = require('npmlog'),
     Promise  = require('bluebird');
 
 module.exports = function createChannel(url, assertions){
-  return require('amqplib').connect(url)
-    .then(openChannel, log.error.bind('RabbitMQ'));
+  return require('amqplib').connect(url).then(openChannel, error);
 
   function openChannel(connection) {
     var close = connection.close.bind(connection);
@@ -21,6 +20,7 @@ module.exports = function createChannel(url, assertions){
       }));
     };
 
+    channel.on('error', error);
     channel.on('blocked', blocked);
     channel.on('unblocked', unblocked);
     channel.isBlocked = false;
@@ -34,19 +34,23 @@ module.exports = function createChannel(url, assertions){
       return channel;
     }
 
-    function closeChannel(error){
-      log.error('RabbitMQ', 'Channel assertions failed', error);
+    function closeChannel(err){
+      log.error('RabbitMQ', 'Channel assertions failed', err);
       channel.close();
       throw error;
     }
 
+    function error(err){
+      log.error('RabbitMQ', err);
+    }
+
     function blocked(){
-      log.warn('RabbitMQ', 'blocked');
+      log.warn('RabbitMQ', 'Channel blocked');
       channel.isBlocked = true;
     }
 
     function unblocked(){
-      log.info('RabbitMQ', 'unblocked');
+      log.info('RabbitMQ', 'Channel unblocked');
       channel.isBlocked = false;
     }
   }

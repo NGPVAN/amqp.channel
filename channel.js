@@ -2,7 +2,8 @@ var log      = require('npmlog'),
     Promise  = require('bluebird');
 
 module.exports = function createChannel(url, assertions){
-  return require('amqplib').connect(url).then(openChannel, error);
+  return require('amqplib').connect(url)
+    .then(openChannel, log.error.bind(log, 'RabbitMQ'));
 
   function openChannel(connection) {
     var close = connection.close.bind(connection);

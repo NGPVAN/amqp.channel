@@ -60,13 +60,11 @@ _.merge(channel, _.mapValues(assertions, function(){
 
 describe('Channel', function() {
   var getChannel = null;
-
   describe('upon successful setup', function(){
     before(function(){
       getChannel = proxyquire('../channel', {
-        amqplib: amqplib,
-        npmlog: npmlog
-      })(amqpUrl, assertions);
+        amqplib: amqplib
+      })(amqpUrl, assertions, npmlog);
       return getChannel;
     });
 
@@ -114,13 +112,10 @@ describe('Channel', function() {
     before(function (done){
       var test = done.bind(null, null);
       channel.assertExchange = channel.assertQueue = 
-      function(){
-        return Promise.reject(new Error('failure'));
-      };
+        sinon.stub().returns(Promise.reject(new Error('Failure')));
       getChannel = proxyquire('../channel', {
-        amqplib: amqplib,
-        npmlog: npmlog
-      })(amqpUrl, assertions);
+        amqplib: amqplib
+      })(amqpUrl, assertions, npmlog);
       getChannel.then(test).catch(test);
     });
 
@@ -132,5 +127,4 @@ describe('Channel', function() {
       expect(getChannel).to.be.rejected;
     });
   });
-
 });

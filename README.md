@@ -32,7 +32,7 @@ require('amqplib').connect(url).then(function(connection){
 amqp.channel syntax:
 
 ```javascript
-require('amqp.channel')(url, [
+require('amqp.channel')(url, {
   assertExchange : [['exchange', 'fanout', { durable: true }]],
   checkExchange  : [['exchange']],
   bindExchange   : [['alt.exchange', 'exchange', '']],
@@ -45,7 +45,7 @@ require('amqp.channel')(url, [
   purgeQueue     : [['queue']],
   deleteQueue    : [['queue', { ifEmpty: true }]],
   prefetch       : [[1]]
-]).then(function(channel){
+}).then(function(channel){
   // Do stuff with the channel
 });
 ```

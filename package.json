@@ -1,6 +1,6 @@
 {
   "name": "amqp.channel",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generalized way to get an AMQP connection/channel setup.",
   "main": "channel.js",
   "dependencies": {

@@ -11,15 +11,18 @@
     "chai": "^1.9.1",
     "chai-as-promised": "^4.1.1",
     "chai-things": "^0.2.0",
+    "coveralls": "^2.11.2",
     "istanbul": "^0.3.2",
     "lodash": "^2.4.1",
     "mocha": "^2.0.0",
+    "mocha-lcov-reporter": "0.0.1",
     "proxyquire": "^1.0.1",
     "sinon": "^1.10.3",
     "sinon-chai": "^2.5.0"
   },
   "scripts": {
     "test": "mocha test",
+    "test-cov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/amqp.channel/index.html"
   },
   "engines": {

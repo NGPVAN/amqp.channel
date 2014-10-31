@@ -1,5 +1,8 @@
 # amqp.channel
 
+[![Build Status][travis-image]][travis-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
+
 Generalized way to get an AMQP connection/channel setup. It's a function that takes an AMQP url as the first parameter and an optional second parameter that defines which methods and arguments should be called on the `channel`. The function returns a `Promise` that will resolve with the [`channel` object](http://www.squaremobius.net/amqp.node/doc/channel_api.html) once all the method invocations defined in the second parameter have been resolved.
 
 ## Compared to `amqplib`
@@ -109,3 +112,8 @@ function consumeQueue(channel){
   return channel;
 }
 ```
+
+[travis-image]: http://img.shields.io/travis/NGPVAN/amqp.channel.svg?style=flat-square
+[travis-url]: https://travis-ci.org/NGPVAN/amqp.channel
+[coveralls-image]: http://img.shields.io/coveralls/NGPVAN/amqp.channel.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/NGPVAN/amqp.channel?branch=master

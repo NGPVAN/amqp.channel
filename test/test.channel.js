@@ -37,6 +37,7 @@ var _ = require('lodash'),
 
 channel.close = sinon.spy();
 chai.use(require('chai-as-promised'));
+chai.use(require('chai-things'));
 chai.use(require('sinon-chai'));
 var expect = chai.expect;
 
@@ -54,24 +55,30 @@ var assertions = {
   deleteQueue    : [['queue', { ifEmpty: true }]]
 };
 
+function stubChannel(){
+  var channel = proxyquire('../channel', {
+    amqplib: amqplib
+  });
+  return arguments.length
+    ? channel.apply(channel, arguments)
+    : channel;
+}
+
 describe('Channel', function() {
   var getChannel = null;
   describe('with no assertions', function(){
     before(function(){
-      getChannel = proxyquire('../channel', {
-        amqplib: amqplib
-      })(amqpUrl);
-      return getChannel;
+      return getChannel = stubChannel(amqpUrl);
     });
 
     it('should connect to the correct RabbitMQ URL', function(){
-      expect(connect).to.have.been.calledOnce;
-      expect(connect).to.have.been.calledWithExactly(amqpUrl);
+      expect(connect).to.have.been.calledOnce
+        .and.to.have.been.calledWithExactly(amqpUrl);
     });
 
     it('should create a Channel on the Connection', function(){
-      expect(createConfirmChannel).to.have.been.calledOnce;
-      expect(createConfirmChannel).to.have.been.calledWithExactly();
+      expect(createConfirmChannel).to.have.been.calledOnce
+        .and.to.have.been.calledWithExactly();
     });
 
     it('should mark the Channel as blocked when it gets a blocked event', function(){
@@ -100,20 +107,17 @@ describe('Channel', function() {
         return sinon.stub().returns(Promise.resolve());
       }));
 
-      getChannel = proxyquire('../channel', {
-        amqplib: amqplib
-      })(amqpUrl, assertions, npmlog);
-      return getChannel;
+      return getChannel = stubChannel(amqpUrl, assertions, npmlog);
     });
 
     it('should connect to the correct RabbitMQ URL', function(){
-      expect(connect).to.have.been.calledOnce;
-      expect(connect).to.have.been.calledWithExactly(amqpUrl);
+      expect(connect).to.have.been.calledOnce
+        .and.to.have.been.calledWithExactly(amqpUrl);
     });
 
     it('should create a Channel on the Connection', function(){
-      expect(createConfirmChannel).to.have.been.calledOnce;
-      expect(createConfirmChannel).to.have.been.calledWithExactly();
+      expect(createConfirmChannel).to.have.been.calledOnce
+        .and.to.have.been.calledWithExactly();
     });
 
     it('should mark the Channel as blocked when it gets a blocked event', function(){
@@ -140,8 +144,10 @@ describe('Channel', function() {
         case 'u': return 'unbind';
       }})();
       var noun = assertion.replace(verb.trim(), '');
-      it('should be able to '+ verb +' '+ noun + 's', function(){
-        expect(channel[assertion].args).to.eql(args);
+      var goal = verb + ' ' + noun + 's';
+      it('should be able to ' + goal, function(){
+        expect(channel).to.have.deep.property(assertion+'.args')
+          .that.is.eql(args);
       });
     });
   });
@@ -151,20 +157,20 @@ describe('Channel', function() {
       var test = done.bind(null, null);
       channel.assertExchange = channel.assertQueue = 
         sinon.stub().returns(Promise.reject(new Error('Failure')));
-      getChannel = proxyquire('../channel', {
-        amqplib: amqplib
-      })(amqpUrl, assertions, npmlog);
+      getChannel = stubChannel(amqpUrl, assertions, npmlog);
       getChannel.then(test).catch(test);
     });
 
     it('should log an error', function(){
-      expect(npmlog.error).to.have.been.calledOnce;
-      expect(npmlog.error.firstCall.args[1]).to.be.an.instanceOf(Error);
+      expect(npmlog.error).to.have.been.calledOnce
+        .and.have.deep.property('firstCall.args')
+          .that.includes.something
+            .that.is.an.instanceOf(Error);
     })
 
     it('should close the channel', function(){
-      expect(channel.close).to.have.been.calledOnce;
-      expect(channel.close).to.have.been.calledWithExactly();
+      expect(channel.close).to.have.been.calledOnce
+        .and.to.have.been.calledWithExactly();
     });
 
     it('should reject with an error', function(){

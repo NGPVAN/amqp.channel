@@ -3,9 +3,9 @@
 [![Build Status][travis-image]][travis-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
-Generalized way to get an AMQP connection/channel setup. It's a function that takes an AMQP url as the first parameter and an optional second parameter that defines which methods and arguments should be called on the `channel`. The function returns a `Promise` that will resolve with the [`channel` object](http://www.squaremobius.net/amqp.node/doc/channel_api.html) once all the method invocations defined in the second parameter have been resolved.
+A simplified way to get an AMQP connection/channel setup using [amqplib](https://www.npmjs.org/package/amqplib). It's a function that takes an AMQP url as the first parameter and an optional second parameter that defines which methods and arguments should be called on the `channel`. The function returns a `Promise` that will resolve with the a `channel` object once all the method invocations defined in the second parameter have been resolved. Please see [amqplib's documentation for the `channel` API](http://www.squaremobius.net/amqp.node/doc/channel_api.html).
 
-## Compared to `amqplib`
+## Compared to amqplib
 
 amqplib syntax:
 

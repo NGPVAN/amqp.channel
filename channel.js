@@ -1,11 +1,12 @@
 var noop = function(){},
-    Promise  = require('bluebird');
+    amqp = require('amqplib'),
+    Promise = require('bluebird');
 
 module.exports = function createChannel(url, assertions, log){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
 
-  return require('amqplib').connect(url).then(openChannel, log.error);
+  return amqp.connect(url).then(openChannel);
 
   function openChannel(connection) {
     var amqp = require('url').parse(url);
@@ -14,16 +15,13 @@ module.exports = function createChannel(url, assertions, log){
     log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
-    return connection.createConfirmChannel().then(assertChannelMethods, close);
+    return connection.createConfirmChannel().then(setupChannel, close);
   }
 
-  function assertChannelMethods(channel) {
+  function setupChannel(channel) {
     var setup = [];
-    for (var fn in assertions) {
-      setup.push.apply(setup, assertions[fn].map(function invocation(args){
-        log.info('- Channel %s(%j)', fn, args);
-        return channel[fn].apply(channel, args);
-      }));
+    for (var method in assertions) {
+      setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
     };
 
     channel.on('error', log.error);
@@ -31,9 +29,14 @@ module.exports = function createChannel(url, assertions, log){
     channel.on('unblocked', blocked(false));
     channel.isBlocked = false;
 
-    return Promise.all(setup)
-      .then(returnChannel)
-      .catch(closeChannel);
+    return Promise.all(setup).then(returnChannel, closeChannel);
+
+    function applyToChannel(method){
+      return function invocation(args){
+        log.info('- Channel %s(%j)', method, args);
+        return channel[method].apply(channel, args);
+      }
+    }
 
     function returnChannel(){
       log.info('- Channel setup complete');
@@ -43,13 +46,13 @@ module.exports = function createChannel(url, assertions, log){
     function closeChannel(error){
       log.error('- Channel assertions failed', error);
       channel.close();
-      throw error;
+      return Promise.reject(error);
     }
 
     function blocked(isBlocked){
+      var state = isBlocked ? 'blocked' : 'unblocked';
+      var level = isBlocked ? 'warn' : 'info';
       return function changeState(){
-        var state = isBlocked ? 'blocked' : 'unblocked';
-        var level = isBlocked ? 'warn' : 'info';
         log[level]('- Channel %s', state);
         channel.isBlocked = isBlocked;
       };

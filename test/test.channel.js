@@ -158,7 +158,7 @@ describe('Channel', function() {
       channel.assertExchange = channel.assertQueue = 
         sinon.stub().returns(Promise.reject(new Error('Failure')));
       getChannel = stubChannel(amqpUrl, assertions, npmlog);
-      getChannel.then(test).catch(test);
+      getChannel.then(test, test);
     });
 
     it('should log an error', function(){

@@ -1,8 +1,9 @@
 var noop = function(){},
     amqp = require('amqplib'),
-    Promise = require('bluebird');
+    Promise = require('bluebird'),
+    simplify = require('./simplify');
 
-module.exports = function createChannel(url, assertions, log){
+module.exports = function createChannel(url, assertions, log, makeSimple){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
 
@@ -40,7 +41,7 @@ module.exports = function createChannel(url, assertions, log){
 
     function returnChannel(){
       log.info('- Channel setup complete');
-      return channel;
+      return makeSimple ? simplify(channel) : channel;
     }
 
     function closeChannel(error){

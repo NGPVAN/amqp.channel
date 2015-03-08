@@ -58,6 +58,10 @@ function simplify(channel) {
       // otherwise it resolves.
       var callback = function(err){ return err ? reject(err) : resolve() };
 
+      // Set the message's `contentType` option to JSON
+      options = options || {};
+      options.contentType = 'application/json';
+
       // ** Here be dragons. **
       // This is probably too clever for its own good, but it's the magic
       // part where we set that outer `ok` variable to the result of the call
@@ -78,13 +82,15 @@ function simplify(channel) {
     var ok, write = new Promise(function(resolve, reject){
       var msg = new Buffer(JSON.stringify(content));
       var callback = function(err){ return err ? reject(err) : resolve() };
+      options = options || {};
+      options.contentType = 'application/json';
       ok = sendToQ.call(channel, queue, msg, options, callback);
     });
     write.ok = ok;
     return write;
   }
 
-  // This will modify the `consume` method so that he message callback supplied
+  // This will modify the `consume` method so that the message callback supplied
   // in the second argument will itself be invoked with the following arguments
   // whenever a message is recieved:
   //
@@ -106,11 +112,5 @@ function parseMessageBefore(callback){
 }
 
 function parseMessage(message) {
-  if (Buffer.isBuffer(message)) {
-    return JSON.parse( message.toString() ); // Buffer -> String -> Object
-  } else if (typeof message == 'string') {
-    return JSON.parse( message ); // String ->  Object
-  } else {
-    return message; // Object?
-  }
+  return JSON.parse( message.toString() ); // Buffer -> String -> Object
 }

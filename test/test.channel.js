@@ -177,4 +177,141 @@ describe('Channel', function() {
       expect(getChannel).to.be.rejectedWith(Error);
     });
   });
+
+  describe('Simplified', function(){
+    before(function(){
+      return getChannel = stubChannel(amqpUrl, null, null, true);
+    });
+
+    function serialize(thing){
+      return {
+        content: new Buffer(JSON.stringify(thing)),
+        fields: {},
+        properties: { contentType: 'application/json' }
+      };
+    }
+
+    function serializedMessage(msg){
+      return function validateSerializedMessage(buffer){
+        var parsed = JSON.parse(buffer.toString());
+        return expect(parsed).to.eql(msg) || true;
+      }
+    }
+
+    describe('#publish()', function(){
+      var promise = {
+        resolved: null,
+        rejected: null
+      };
+      var msg = { hello: 'world' };
+      var originalFn = sinon.stub();
+      originalFn.onFirstCall().returns(false).callsArgWith(4, new Error('test'));
+      originalFn.onSecondCall().returns(true).callsArgWith(4, null);
+      channel.publish = originalFn;
+
+      before(function(){
+        var ch = null
+        return getChannel.then(function(c){ ch = c;
+          return promise.rejected = ch.publish('exchange', 'routingKey', msg);
+        }).catch(function(){
+          return promise.resolved = ch.publish('exchange', 'routingKey', msg);
+        });
+      });
+
+      it('should call the original #publish method', function(){
+        expect(originalFn).to.have.been.calledTwice;
+      });
+
+      it('should serialize the passed message object into a Buffer', function(){
+        expect(originalFn).and.to.have.been.calledWithExactly(
+          'exchange',
+          'routingKey',
+          sinon.match(serializedMessage(msg)),
+          sinon.match({ contentType: 'application/json' }),
+          sinon.match.func
+        );
+      });
+
+      it('should return a promise with extra `ok` property', function(){
+        expect(promise.rejected).to.have.property('ok').that.is.false;
+        expect(promise.rejected).to.be.rejectedWith(Error);
+        expect(promise.resolved).to.have.property('ok').that.is.true;
+        expect(promise.resolved).to.be.resolved;
+      });
+    });
+
+    describe('#sendToQueue()', function(){
+      var promise = {
+        resolved: null,
+        rejected: null
+      };
+      var msg = { hello: 'world' };
+      var originalFn = sinon.stub();
+      originalFn.onFirstCall().returns(false).callsArgWith(3, new Error('test'));
+      originalFn.onSecondCall().returns(true).callsArgWith(3, null);
+      channel.sendToQueue = originalFn;
+      
+      before(function(){
+        var ch = null
+        return getChannel.then(function(c){ ch = c;
+          return promise.rejected = ch.sendToQueue('queue', msg);
+        }).catch(function(){
+          return promise.resolved = ch.sendToQueue('queue', msg);
+        });
+      });
+
+      it('should call the original #publish method', function(){
+        expect(originalFn).to.have.been.calledTwice;
+      });
+
+      it('should serialize the passed message object into a Buffer', function(){
+        expect(originalFn).and.to.have.been.calledWithExactly(
+          'queue',
+          sinon.match(serializedMessage(msg)),
+          sinon.match({ contentType: 'application/json' }),
+          sinon.match.func
+        );
+      });
+
+      it('should return a promise with extra `ok` property', function(){
+        expect(promise.rejected).to.have.property('ok').that.is.false;
+        expect(promise.rejected).to.be.rejectedWith(Error);
+        expect(promise.resolved).to.have.property('ok').that.is.true;
+        expect(promise.resolved).to.be.resolved;
+      });
+    });
+
+    describe('#consume()', function(){
+      var receiveMessage = null;
+      channel.consume = sinon.spy(function(queue, callback){
+        receiveMessage = callback;
+      });
+
+      before(function(){
+        return getChannel;
+      });
+
+      // And this is how you get multiline test descriptions
+      it('should be modified so that the callback supplied in the second argument', test);
+      it('will itself be invoked with the parsed message object and the original', test);
+      it('message whenever a message is recieved', test);
+
+      function test(){
+        var msg = { hello: 'world', when: Date.now() };
+        var consumer = sinon.spy();
+        var testMsg = serialize(msg);
+        channel.consume('queue', consumer);
+        receiveMessage(testMsg);
+        expect(consumer).to.have.been.calledWithExactly(
+          sinon.match(msg),
+          sinon.match(testMsg)
+        );
+      }
+    });
+
+    after(function(){
+      connect.reset();
+      createConfirmChannel.reset();
+    });
+  });
 });

@@ -3,7 +3,7 @@ var noop = function(){},
     Promise = require('bluebird'),
     simplify = require('./simplify');
 
-module.exports = function createChannel(url, assertions, log, makeSimple){
+module.exports = function createChannel(url, assertions, log){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
 
@@ -41,7 +41,7 @@ module.exports = function createChannel(url, assertions, log, makeSimple){
 
     function returnChannel(){
       log.info('- Channel setup complete');
-      return makeSimple ? simplify(channel) : channel;
+      return simplify(channel);
     }
 
     function closeChannel(error){

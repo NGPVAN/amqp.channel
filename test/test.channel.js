@@ -180,7 +180,7 @@ describe('Channel', function() {
 
   describe('Simplified', function(){
     before(function(){
-      return getChannel = stubChannel(amqpUrl, null, null, true);
+      return getChannel = stubChannel(amqpUrl, null, null);
     });
 
     function serialize(thing){

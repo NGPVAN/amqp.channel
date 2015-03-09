@@ -6,9 +6,11 @@ function simplify(channel) {
       publish = channel.publish,
       sendToQ = channel.sendToQueue;
 
+  if (channel._simplified) return channel;
   channel.consume = consumeMessage;
   channel.publish = publishMessage;
   channel.sendToQueue = sendMessageToQueue;
+  channel._simplified = true;
 
   // The `publish` and `sendToQueue` methods are special on a ConfirmChannel
   // instance as they are the only methods that only provide the callback style

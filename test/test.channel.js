@@ -103,11 +103,12 @@ describe('Channel', function() {
 
   describe('with valid assertions', function(){
     before(function(){
-      _.merge(channel, _.mapValues(assertions, function(){
-        return sinon.stub().returns(Promise.resolve());
+      var methods = _.merge({ bogus: [['foo', 'bar']] }, assertions);
+      _.merge(channel, _.mapValues(methods, function(val, key){
+        return key === 'bogus' ? null : sinon.stub().returns(Promise.resolve());
       }));
 
-      return getChannel = stubChannel(amqpUrl, assertions, npmlog);
+      return getChannel = stubChannel(amqpUrl, methods, npmlog);
     });
 
     it('should connect to the correct RabbitMQ URL', function(){
@@ -292,20 +293,22 @@ describe('Channel', function() {
       });
 
       // And this is how you get multiline test descriptions
-      it('should be modified so that the callback supplied in the second argument', test);
-      it('will itself be invoked with the parsed message object and the original', test);
-      it('message whenever a message is recieved', test);
+      it('should be modified so that the callback supplied in the second argument', test());
+      it('will itself be invoked with the parsed message object and the original', test());
+      it('message whenever a message is recieved', test(true));
 
-      function test(){
-        var msg = { hello: 'world', when: Date.now() };
+      function test(cancelled){
         var consumer = sinon.spy();
-        var testMsg = serialize(msg);
-        channel.consume('queue', consumer);
-        receiveMessage(testMsg);
-        expect(consumer).to.have.been.calledWithExactly(
-          sinon.match(msg),
-          sinon.match(testMsg)
-        );
+        var msg = cancelled ? null : { hello: 'world', when: Date.now() };
+        var testMsg = cancelled ? null : serialize(msg);
+        return function(){
+          channel.consume('queue', consumer);
+          receiveMessage(testMsg);
+          expect(consumer).to.have.been.calledWithExactly(
+            sinon.match(msg),
+            testMsg
+          );
+        }
       }
     });
 

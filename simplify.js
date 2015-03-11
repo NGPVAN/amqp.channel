@@ -2,15 +2,15 @@ var Promise = require('bluebird');
 module.exports = simplify;
 
 function simplify(channel) {
+  if (channel.simplified) return channel;
   var consume = channel.consume,
       publish = channel.publish,
       sendToQ = channel.sendToQueue;
 
-  if (channel._simplified) return channel;
   channel.consume = consumeMessage;
   channel.publish = publishMessage;
   channel.sendToQueue = sendMessageToQueue;
-  channel._simplified = true;
+  Object.defineProperty(channel, 'simplified', { value: true });
 
   // The `publish` and `sendToQueue` methods are special on a ConfirmChannel
   // instance as they are the only methods that only provide the callback style
@@ -109,10 +109,13 @@ function parseMessageBefore(callback){
   return function onMessageParser(msg){
     // Now you will get back the parsed JSON object back
     // as the first argument and the original as the second
-    return callback(parseMessage(msg.content), msg);
+    return callback(parseMessage(msg), msg);
   };
 }
 
 function parseMessage(message) {
-  return JSON.parse( message.toString() ); // Buffer -> String -> Object
+  // The message will be `null` if the consumer was cancelled by RabbitMQ
+  return message !== null && message.content
+       ? JSON.parse(message.content.toString()) // Buffer -> String -> Object
+       : message;
 }

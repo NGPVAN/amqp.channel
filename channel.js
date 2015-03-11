@@ -20,15 +20,22 @@ module.exports = function createChannel(url, assertions, log){
   }
 
   function setupChannel(channel) {
-    var setup = [];
+    var setup = [], channelIsBlocked = false;
     for (var method in assertions) {
-      setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
+      if (typeof channel[method] === 'function') {
+        setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
+      }
     };
 
     channel.on('error', log.error);
     channel.on('blocked', blocked(true));
     channel.on('unblocked', blocked(false));
-    channel.isBlocked = false;
+    if (!channel.hasOwnProperty('isBlocked')) {
+      Object.defineProperty(channel, 'isBlocked', {
+        get: function(){ return channelIsBlocked },
+        enumerable: true
+      });
+    }
 
     return Promise.all(setup).then(returnChannel, closeChannel);
 
@@ -53,9 +60,9 @@ module.exports = function createChannel(url, assertions, log){
     function blocked(isBlocked){
       var state = isBlocked ? 'blocked' : 'unblocked';
       var level = isBlocked ? 'warn' : 'info';
-      return function changeState(){
+      return function changeBlockedState(){
         log[level]('- Channel %s', state);
-        channel.isBlocked = isBlocked;
+        channelIsBlocked = isBlocked;
       };
     }
   }

@@ -103,12 +103,11 @@ describe('Channel', function() {
 
   describe('with valid assertions', function(){
     before(function(){
-      var methods = _.merge({ bogus: [['foo', 'bar']] }, assertions);
-      _.merge(channel, _.mapValues(methods, function(val, key){
-        return key === 'bogus' ? null : sinon.stub().returns(Promise.resolve());
+      _.merge(channel, _.mapValues(assertions, function(){
+        return sinon.stub().returns(Promise.resolve());
       }));
 
-      return getChannel = stubChannel(amqpUrl, methods, npmlog);
+      return getChannel = stubChannel(amqpUrl, assertions, npmlog);
     });
 
     it('should connect to the correct RabbitMQ URL', function(){
@@ -151,14 +150,18 @@ describe('Channel', function() {
           .that.is.eql(args);
       });
     });
+
+    after(function(){
+      connect.reset();
+      createConfirmChannel.reset();
+    });
   });
 
   describe('with invalid assertions', function(){
     before(function (done){
       var test = done.bind(null, null);
-      channel.assertExchange = channel.assertQueue = 
-        sinon.stub().returns(Promise.reject(new Error('Failure')));
-      getChannel = stubChannel(amqpUrl, assertions, npmlog);
+      var methods = _.merge({ bogus : [['foo', 'bar']] }, assertions);
+      getChannel = stubChannel(amqpUrl, methods, npmlog);
       getChannel.then(test, test);
     });
 
@@ -166,7 +169,7 @@ describe('Channel', function() {
       expect(npmlog.error).to.have.been.calledOnce
         .and.have.deep.property('firstCall.args')
           .that.includes.something
-            .that.is.an.instanceOf(Error);
+            .that.is.an.instanceOf(TypeError);
     })
 
     it('should close the channel', function(){
@@ -175,7 +178,11 @@ describe('Channel', function() {
     });
 
     it('should reject with an error', function(){
-      expect(getChannel).to.be.rejectedWith(Error);
+      expect(getChannel).to.be.rejectedWith(TypeError);
+    });
+    after(function(){
+      connect.reset();
+      createConfirmChannel.reset();
     });
   });
 

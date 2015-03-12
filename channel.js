@@ -12,11 +12,11 @@ module.exports = function createChannel(url, assertions, log){
   function openChannel(connection) {
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
-    var close = connection.close.bind(connection);
+    var close = function(e){ connection.close(); return Promise.reject(e); };
     log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
-    return connection.createConfirmChannel().then(setupChannel, close);
+    return connection.createConfirmChannel().then(setupChannel).catch(close);
   }
 
   function setupChannel(channel) {
@@ -24,6 +24,10 @@ module.exports = function createChannel(url, assertions, log){
     for (var method in assertions) {
       if (typeof channel[method] === 'function') {
         setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
+      } else {
+        return closeChannel(
+          new TypeError('Channel has no method "' + method + '"')
+        );
       }
     };
 

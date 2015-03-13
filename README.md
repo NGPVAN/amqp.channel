@@ -59,6 +59,7 @@ The `channel` object resolved by the returned `Promise` will behave differently 
 
 1. The `consume`, `publish`, and `sendToQueue` channel methods have been changed to  explicitly handle JSON.
 2. The `publish` and `sendToQueue` methods have been "promisified" in a way that will still provide information to know whether or not the write buffer is full (and therefore, whether or not you should continue writing to it) by adding an additional `ok` boolean property to the promise.
+3. A `channel` consumer callback will no longer receive `null` when that consumer had been cancelled by Rabbit MQ. Instead, the `channel` object will emit a `'cancelled'` event with all the arguments passed to the `channel.consume()` call for the consume that was cancelled.
 
 #### Examples of Modified Usage:
 
@@ -85,6 +86,18 @@ channel.consume('someQueue', function(parsedMessage, originalMessage){
   console.log('hello', parsedMessage.hello); // => hello world
   channel.ack(originalMessage);
 });
+```
+
+Handling a consumer getting cancelled by Rabbit MQ:
+
+```javascript
+channel.on('cancelled', function(queue, callback, options){
+  // When the consumer below gets cancelled by Rabbit MQ
+  console.log(queue, callback.name, options); // 'someQueue', 'onMessage', { noAck: true }
+});
+channel.consume('someQueue', function onMessage(parsedMessage, originalMessage){
+  console.log(parsedMessage);
+}, { noAck: true });
 ```
 
 The `ok` property on the promises returned by the `sendToQueue` and `publish` methods:

@@ -59,7 +59,7 @@ The `channel` object resolved by the returned `Promise` will behave differently 
 
 1. The `consume`, `publish`, and `sendToQueue` channel methods have been changed to  explicitly handle JSON.
 2. The `publish` and `sendToQueue` methods have been "promisified" in a way that will still provide information to know whether or not the write buffer is full (and therefore, whether or not you should continue writing to it) by adding an additional `ok` boolean property to the promise.
-3. A `channel` consumer callback will no longer receive `null` when that consumer had been cancelled by Rabbit MQ. Instead, the `channel` object will emit a `'cancelled'` event with all the arguments passed to the `channel.consume()` call for the consume that was cancelled.
+3. A `channel` consumer callback will no longer receive `null` when that consumer had been cancelled by Rabbit MQ. Instead, the `channel` object will emit a `'cancelled'` event with all the arguments passed to the `channel.consume()` call for the consumer that was cancelled.
 
 #### Examples of Modified Usage:
 

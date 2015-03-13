@@ -99,23 +99,24 @@ function simplify(channel) {
   // 1. The parsed JSON object
   // 2. The original message (You need this to `ack` and `nack` the message)
   function consumeMessage(queue, callback, options){
-    return consume.call(channel, queue, parseMessageBefore(callback), options);
+    var simplifiedCallback = parseMessageBefore(queue, callback, options);
+    return consume.call(channel, queue, simplifiedCallback, options);
+  }
+
+  function parseMessageBefore(queue, callback, options){
+    return function onMessageParser(msg){
+      // The message will be `null` if the consumer was cancelled by RabbitMQ
+      if (msg === null) {
+        channel.emit('cancelled', queue, callback, options);
+      } else {
+        callback(parseMessage(msg), msg);
+      }
+    };
   }
 
   return channel;
 }
 
-function parseMessageBefore(callback){
-  return function onMessageParser(msg){
-    // Now you will get back the parsed JSON object back
-    // as the first argument and the original as the second
-    return callback(parseMessage(msg), msg);
-  };
-}
-
 function parseMessage(message) {
-  // The message will be `null` if the consumer was cancelled by RabbitMQ
-  return message !== null && message.content
-       ? JSON.parse(message.content.toString()) // Buffer -> String -> Object
-       : message;
+  return JSON.parse(message.content.toString()); // Buffer -> String -> Object
 }

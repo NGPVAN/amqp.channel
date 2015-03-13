@@ -291,30 +291,42 @@ describe('Channel', function() {
 
     describe('#consume()', function(){
       var receiveMessage = null;
+      var onCancelled = sinon.spy();
       channel.consume = sinon.spy(function(queue, callback){
         receiveMessage = callback;
       });
+      channel.on('cancelled', onCancelled);
 
       before(function(){
         return getChannel;
       });
 
       // And this is how you get multiline test descriptions
-      it('should be modified so that the callback supplied in the second argument', test());
-      it('will itself be invoked with the parsed message object and the original', test());
-      it('message whenever a message is recieved', test(true));
+      it('should be modified so that the callback supplied in the second', test());
+      it('argument will itself be invoked with the parsed message object', test());
+      it('and the original message whenever a message is recieved and', test());
+      it('should emit a `cancelled` event on the channel with the parameters', test(true));
+      it('passed to channel.consume() when a consumer gets cancelled', test(true));
 
       function test(cancelled){
         var consumer = sinon.spy();
         var msg = cancelled ? null : { hello: 'world', when: Date.now() };
         var testMsg = cancelled ? null : serialize(msg);
         return function(){
-          channel.consume('queue', consumer);
+          channel.consume('queue', consumer, { noAck: true });
           receiveMessage(testMsg);
-          expect(consumer).to.have.been.calledWithExactly(
-            sinon.match(msg),
-            testMsg
-          );
+          if (cancelled) {
+            expect(onCancelled).to.have.been.calledWithExactly(
+              'queue',
+              consumer,
+              { noAck: true }
+            );
+          } else {
+            expect(consumer).to.have.been.calledWithExactly(
+              sinon.match(msg),
+              testMsg
+            );
+          }
         }
       }
     });

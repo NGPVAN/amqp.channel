@@ -1,6 +1,7 @@
 var noop = function(){},
     amqp = require('amqplib'),
-    Promise = require('bluebird');
+    Promise = require('bluebird'),
+    simplify = require('./simplify');
 
 module.exports = function createChannel(url, assertions, log){
   assertions = assertions || {};
@@ -11,23 +12,34 @@ module.exports = function createChannel(url, assertions, log){
   function openChannel(connection) {
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
-    var close = connection.close.bind(connection);
+    var close = function(e){ connection.close(); return Promise.reject(e); };
     log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
-    return connection.createConfirmChannel().then(setupChannel, close);
+    return connection.createConfirmChannel().then(setupChannel).catch(close);
   }
 
   function setupChannel(channel) {
-    var setup = [];
+    var setup = [], channelIsBlocked = false;
     for (var method in assertions) {
-      setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
+      if (typeof channel[method] === 'function') {
+        setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
+      } else {
+        return closeChannel(
+          new TypeError('Channel has no method "' + method + '"')
+        );
+      }
     };
 
     channel.on('error', log.error);
     channel.on('blocked', blocked(true));
     channel.on('unblocked', blocked(false));
-    channel.isBlocked = false;
+    if (!channel.hasOwnProperty('isBlocked')) {
+      Object.defineProperty(channel, 'isBlocked', {
+        get: function(){ return channelIsBlocked },
+        enumerable: true
+      });
+    }
 
     return Promise.all(setup).then(returnChannel, closeChannel);
 
@@ -40,7 +52,7 @@ module.exports = function createChannel(url, assertions, log){
 
     function returnChannel(){
       log.info('- Channel setup complete');
-      return channel;
+      return simplify(channel);
     }
 
     function closeChannel(error){
@@ -52,9 +64,9 @@ module.exports = function createChannel(url, assertions, log){
     function blocked(isBlocked){
       var state = isBlocked ? 'blocked' : 'unblocked';
       var level = isBlocked ? 'warn' : 'info';
-      return function changeState(){
+      return function changeBlockedState(){
         log[level]('- Channel %s', state);
-        channel.isBlocked = isBlocked;
+        channelIsBlocked = isBlocked;
       };
     }
   }

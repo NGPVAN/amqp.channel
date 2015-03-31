@@ -3,13 +3,15 @@ module.exports = simplify;
 
 function simplify(channel) {
   if (channel.simplified) return channel;
-  var consume = channel.consume,
+  var get     = channel.get,
+      consume = channel.consume,
       publish = channel.publish,
       sendToQ = channel.sendToQueue;
 
+  channel.get = getMessage;
   channel.consume = consumeMessage;
   channel.publish = publishMessage;
-  channel.sendToQueue = sendMessageToQueue;
+  channel.sendToQueue = sendToQueue;
   Object.defineProperty(channel, 'simplified', { value: true });
 
   // The `publish` and `sendToQueue` methods are special on a ConfirmChannel
@@ -61,14 +63,14 @@ function simplify(channel) {
       var callback = function(err){ return err ? reject(err) : resolve() };
 
       // Set the message's `contentType` option to JSON
-      options = options || {};
-      options.contentType = 'application/json';
+      var opts = options || {};
+      opts.contentType = 'application/json';
 
       // ** Here be dragons. **
       // This is probably too clever for its own good, but it's the magic
       // part where we set that outer `ok` variable to the result of the call
       // to the original `channel.publish()` (e.g. the underlying `.write()`)
-      ok = publish.call(channel, exchange, key, msg, options, callback);
+      ok = publish.call(channel, exchange, key, msg, opts, callback);
     });
 
     // Finally we set the special `ok` property on the promise and return it.
@@ -80,13 +82,13 @@ function simplify(channel) {
   // takes different arguments and I really didn't want to resort to doing
   // things like `fn.call.apply([].prototype.call(arguments).concat([...]))`
   // just for the sake of keeping it DRY.
-  function sendMessageToQueue(queue, content, options){
+  function sendToQueue(queue, content, options){
     var ok, write = new Promise(function(resolve, reject){
       var msg = new Buffer(JSON.stringify(content));
       var callback = function(err){ return err ? reject(err) : resolve() };
-      options = options || {};
-      options.contentType = 'application/json';
-      ok = sendToQ.call(channel, queue, msg, options, callback);
+      var opts = options || {};
+      opts.contentType = 'application/json';
+      ok = sendToQ.call(channel, queue, msg, opts, callback);
     });
     write.ok = ok;
     return write;
@@ -103,13 +105,17 @@ function simplify(channel) {
     return consume.call(channel, queue, simplifiedCallback, options);
   }
 
+  function getMessage(queue, options){
+    return get.call(channel, queue, options).then(parseGetMessage);
+  }
+
   function parseMessageBefore(queue, callback, options){
     return function onMessageParser(msg){
       // The message will be `null` if the consumer was cancelled by RabbitMQ
       if (msg === null) {
         channel.emit('cancelled', queue, callback, options);
       } else {
-        callback(parseMessage(msg), msg);
+        callback.apply(null, parseMessage(msg));
       }
     };
   }
@@ -117,6 +123,12 @@ function simplify(channel) {
   return channel;
 }
 
+function parseGetMessage(get){
+  return get === false
+       ? [false, false]
+       : parseMessage(get);
+}
+
 function parseMessage(message) {
-  return JSON.parse(message.content.toString()); // Buffer -> String -> Object
+  return [JSON.parse(message.content.toString()), message];
 }

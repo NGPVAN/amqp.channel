@@ -1,24 +1,24 @@
 {
   "name": "amqp.channel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simplified way to setup an AMQP connection/channel with amqplib",
   "main": "channel.js",
   "dependencies": {
-    "amqplib": "^0.3.1",
-    "bluebird": "^2.9.13"
+    "amqplib": "^0.3.2",
+    "bluebird": "^2.9.21"
   },
   "devDependencies": {
-    "chai": "^1.9.1",
-    "chai-as-promised": "^4.1.1",
+    "chai": "^2.2.0",
+    "chai-as-promised": "^4.3.0",
     "chai-things": "^0.2.0",
     "coveralls": "^2.11.2",
-    "istanbul": "^0.3.2",
-    "lodash": "^2.4.1",
-    "mocha": "^2.0.0",
-    "mocha-lcov-reporter": "0.0.1",
-    "proxyquire": "^1.0.1",
-    "sinon": "^1.10.3",
-    "sinon-chai": "^2.5.0"
+    "istanbul": "^0.3.13",
+    "lodash": "^3.6.0",
+    "mocha": "^2.2.1",
+    "mocha-lcov-reporter": "0.0.2",
+    "proxyquire": "^1.4.0",
+    "sinon": "^1.14.1",
+    "sinon-chai": "^2.7.0"
   },
   "scripts": {
     "test": "mocha test",
@@ -26,7 +26,7 @@
     "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/amqp.channel/index.html"
   },
   "engines": {
-    "node": "0.10.x"
+    "node": ">=0.10 <0.13 || ^1"
   },
   "repository": {
     "type": "git",

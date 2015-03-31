@@ -200,10 +200,10 @@ describe('Channel', function() {
     }
 
     function serializedMessage(msg){
-      return function validateSerializedMessage(buffer){
+      return sinon.match(function validateSerializedMessage(buffer){
         var parsed = JSON.parse(buffer.toString());
         return expect(parsed).to.eql(msg) || true;
-      }
+      });
     }
 
     describe('#publish()', function(){
@@ -212,13 +212,13 @@ describe('Channel', function() {
         rejected: null
       };
       var msg = { hello: 'world' };
-      var originalFn = sinon.stub();
-      originalFn.onFirstCall().returns(false).callsArgWith(4, new Error('test'));
-      originalFn.onSecondCall().returns(true).callsArgWith(4, null);
-      channel.publish = originalFn;
+      var publish = sinon.stub();
+      publish.onFirstCall().returns(false).callsArgWith(4, new Error('test'));
+      publish.onSecondCall().returns(true).callsArgWith(4, null);
+      channel.publish = publish;
 
       before(function(){
-        var ch = null
+        var ch;
         return getChannel.then(function(c){ ch = c;
           return promise.rejected = ch.publish('exchange', 'routingKey', msg);
         }).catch(function(){
@@ -227,15 +227,15 @@ describe('Channel', function() {
       });
 
       it('should call the original #publish method', function(){
-        expect(originalFn).to.have.been.calledTwice;
+        expect(publish).to.have.been.calledTwice;
       });
 
       it('should serialize the passed message object into a Buffer', function(){
-        expect(originalFn).and.to.have.been.calledWithExactly(
+        expect(publish).and.to.have.been.calledWithExactly(
           'exchange',
           'routingKey',
-          sinon.match(serializedMessage(msg)),
-          sinon.match({ contentType: 'application/json' }),
+          serializedMessage(msg),
+          { contentType: 'application/json' },
           sinon.match.func
         );
       });
@@ -254,13 +254,13 @@ describe('Channel', function() {
         rejected: null
       };
       var msg = { hello: 'world' };
-      var originalFn = sinon.stub();
-      originalFn.onFirstCall().returns(false).callsArgWith(3, new Error('test'));
-      originalFn.onSecondCall().returns(true).callsArgWith(3, null);
-      channel.sendToQueue = originalFn;
+      var sendToQueue = sinon.stub();
+      sendToQueue.onFirstCall().returns(false).callsArgWith(3, new Error('test'));
+      sendToQueue.onSecondCall().returns(true).callsArgWith(3, null);
+      channel.sendToQueue = sendToQueue;
       
       before(function(){
-        var ch = null
+        var ch;
         return getChannel.then(function(c){ ch = c;
           return promise.rejected = ch.sendToQueue('queue', msg);
         }).catch(function(){
@@ -269,14 +269,14 @@ describe('Channel', function() {
       });
 
       it('should call the original #publish method', function(){
-        expect(originalFn).to.have.been.calledTwice;
+        expect(sendToQueue).to.have.been.calledTwice;
       });
 
       it('should serialize the passed message object into a Buffer', function(){
-        expect(originalFn).and.to.have.been.calledWithExactly(
+        expect(sendToQueue).and.to.have.been.calledWithExactly(
           'queue',
-          sinon.match(serializedMessage(msg)),
-          sinon.match({ contentType: 'application/json' }),
+          serializedMessage(msg),
+          { contentType: 'application/json' },
           sinon.match.func
         );
       });
@@ -287,6 +287,33 @@ describe('Channel', function() {
         expect(promise.resolved).to.have.property('ok').that.is.true;
         expect(promise.resolved).to.be.resolved;
       });
+    });
+
+    describe('#get()', function(){
+      var get = sinon.stub();
+      var msg = { hello: 'world', when: Date.now() };
+      var serialized = serialize(msg);
+      get.onFirstCall().returns(Promise.resolve(serialize(msg)));
+      get.onSecondCall().returns(Promise.resolve(false));
+      channel.get = get;
+
+      before(function(){
+        return getChannel;
+      });
+
+      // And this is how you get multiline test descriptions
+      it('should be resolved with the parsed message and original', function(){
+        return Promise.all([
+          channel.get('queue', { noAck: true }).spread(function(parsed, orig){
+            expect(parsed).to.eql(msg);
+            expect(orig).to.eql(serialized);
+          }),
+          channel.get('queue').spread(function(parsed, orig){
+            expect(parsed).to.be.false;
+            expect(orig).to.be.false;
+          })
+        ]);
+      });      
     });
 
     describe('#consume()', function(){

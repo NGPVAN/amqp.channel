@@ -1,4 +1,5 @@
 var noop = function(){},
+    util = require('util'),
     amqp = require('amqplib'),
     Promise = require('bluebird'),
     simplify = require('./simplify');
@@ -26,7 +27,7 @@ module.exports = function createChannel(url, assertions, log){
         setup.push.apply(setup, assertions[method].map(applyToChannel(method)));
       } else {
         return closeChannel(
-          new TypeError('Channel has no method "' + method + '"')
+          new TypeError(util.format('Channel has no method "%s"', method))
         );
       }
     };

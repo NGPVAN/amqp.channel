@@ -5,13 +5,11 @@ function simplify(channel) {
   if (channel.simplified) return channel;
   var get     = channel.get,
       consume = channel.consume,
-      publish = channel.publish,
-      sendToQ = channel.sendToQueue;
+      publish = channel.publish;
 
   channel.get = getMessage;
   channel.consume = consumeMessage;
   channel.publish = publishMessage;
-  channel.sendToQueue = sendToQueue;
   Object.defineProperty(channel, 'simplified', { value: true });
 
   // The `publish` and `sendToQueue` methods are special on a ConfirmChannel
@@ -74,22 +72,6 @@ function simplify(channel) {
     });
 
     // Finally we set the special `ok` property on the promise and return it.
-    write.ok = ok;
-    return write;
-  }
-
-  // We essentially repeat ourselves here because the `sendToQueue` method
-  // takes different arguments and I really didn't want to resort to doing
-  // things like `fn.call.apply([].prototype.call(arguments).concat([...]))`
-  // just for the sake of keeping it DRY.
-  function sendToQueue(queue, content, options){
-    var ok, write = new Promise(function(resolve, reject){
-      var msg = new Buffer(JSON.stringify(content));
-      var callback = function(err){ return err ? reject(err) : resolve() };
-      var opts = options || {};
-      opts.contentType = 'application/json';
-      ok = sendToQ.call(channel, queue, msg, opts, callback);
-    });
     write.ok = ok;
     return write;
   }

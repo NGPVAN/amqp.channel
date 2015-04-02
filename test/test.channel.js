@@ -11,7 +11,7 @@ var _ = require('lodash'),
     channel = new (require('events').EventEmitter)(),
     amqpUrl = 'amqp://test:test@192.168.2.2:5672',
     connection = {
-      close: sinon.spy(),
+      close: sinon.stub().returns(true),
       createConfirmChannel: function(){
         return Promise.resolve(channel);
       }
@@ -234,47 +234,6 @@ describe('Channel', function() {
         expect(publish).and.to.have.been.calledWithExactly(
           'exchange',
           'routingKey',
-          serializedMessage(msg),
-          { contentType: 'application/json' },
-          sinon.match.func
-        );
-      });
-
-      it('should return a promise with extra `ok` property', function(){
-        expect(promise.rejected).to.have.property('ok').that.is.false;
-        expect(promise.rejected).to.be.rejectedWith(Error);
-        expect(promise.resolved).to.have.property('ok').that.is.true;
-        expect(promise.resolved).to.be.resolved;
-      });
-    });
-
-    describe('#sendToQueue()', function(){
-      var promise = {
-        resolved: null,
-        rejected: null
-      };
-      var msg = { hello: 'world' };
-      var sendToQueue = sinon.stub();
-      sendToQueue.onFirstCall().returns(false).callsArgWith(3, new Error('test'));
-      sendToQueue.onSecondCall().returns(true).callsArgWith(3, null);
-      channel.sendToQueue = sendToQueue;
-      
-      before(function(){
-        var ch;
-        return getChannel.then(function(c){ ch = c;
-          return promise.rejected = ch.sendToQueue('queue', msg);
-        }).catch(function(){
-          return promise.resolved = ch.sendToQueue('queue', msg);
-        });
-      });
-
-      it('should call the original #publish method', function(){
-        expect(sendToQueue).to.have.been.calledTwice;
-      });
-
-      it('should serialize the passed message object into a Buffer', function(){
-        expect(sendToQueue).and.to.have.been.calledWithExactly(
-          'queue',
           serializedMessage(msg),
           { contentType: 'application/json' },
           sinon.match.func

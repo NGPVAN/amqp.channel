@@ -1,11 +1,11 @@
 {
   "name": "amqp.channel",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simplified way to setup an AMQP connection/channel with amqplib",
   "main": "channel.js",
   "dependencies": {
     "amqplib": "^0.3.2",
-    "bluebird": "^2.9.21"
+    "bluebird": "^2.9.24"
   },
   "devDependencies": {
     "chai": "^2.2.0",

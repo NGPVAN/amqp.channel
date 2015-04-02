@@ -14,8 +14,8 @@ module.exports = function createChannel(url, assertions, log){
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
     var close = function closeConnection(e){
-      return e ? connection.close() && Promise.reject(e)
-               : connection.close();
+      var close = Promise.resolve(connection.close());
+      return e ? close.throw(e) : /* istanbul ignore next */ close;
     };
     log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);

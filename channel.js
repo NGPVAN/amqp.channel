@@ -13,7 +13,7 @@ module.exports = function createChannel(url, assertions, log){
   function openChannel(connection) {
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
-    var close = function(e){ connection.close(); return Promise.reject(e); };
+    var close = function(e){ connection.close(); if (e) { return Promise.reject(e); } };
     log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);

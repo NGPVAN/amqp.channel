@@ -40,19 +40,23 @@ require('amqplib').connect(url).then(function(connection){
 **amqp.channel syntax:**
 
 ```javascript
-require('amqp.channel')(url, {
-  assertExchange : [['exchange', 'fanout', { durable: true }]],
-  checkExchange  : [['exchange']],
-  bindExchange   : [['alt.exchange', 'exchange', '']],
-  unbindExchange : [['alt.exchange', 'exchange', '']],
-  deleteExchange : [['alt.exchange', { ifEmpty: true }]],
-  assertQueue    : [['first', { durable: true  }], ['second']],
-  checkQueue     : [['first']],
-  bindQueue      : [['first', 'exchange', '']],
-  unbindQueue    : [['first', 'exchange', '']],
-  purgeQueue     : [['first']],
-  deleteQueue    : [['first', { ifEmpty: true }], ['second']]
-}).then(function(channel){
+require('amqp.channel')(
+  url, 
+  {
+    assertExchange : [['exchange', 'fanout', { durable: true }]],
+    checkExchange  : [['exchange']],
+    bindExchange   : [['alt.exchange', 'exchange', '']],
+    unbindExchange : [['alt.exchange', 'exchange', '']],
+    deleteExchange : [['alt.exchange', { ifEmpty: true }]],
+    assertQueue    : [['first', { durable: true  }], ['second']],
+    checkQueue     : [['first']],
+    bindQueue      : [['first', 'exchange', '']],
+    unbindQueue    : [['first', 'exchange', '']],
+    purgeQueue     : [['first']],
+    deleteQueue    : [['first', { ifEmpty: true }], ['second']]
+  },
+  logger
+).then(function(channel){
   // Do stuff with the channel
 });
 ```
@@ -162,7 +166,7 @@ In your app.js:
 var cfg = require('./config');
 var amqp = require('amqp.channel');
 
-module.exports = amqp(cfg.amqpUrl, cfg.channelMethodsToCall)
+module.exports = amqp(cfg.amqpUrl, cfg.channelMethodsToCall, console)
   .then(consumeAtMost(1))
   .then(consumeFrom(cfg.queue.toConsumeFrom));
   

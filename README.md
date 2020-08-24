@@ -123,7 +123,7 @@ if (sent.ok) {
 amqp.channel supports two parameters meant to modify connection options passed on to amqplib.
 
 The first is an object called `socketOptions` is the equivalent to the same named property on the 
-[channel#connect method]()http://www.squaremobius.net/amqp.node/channel_api.html#connect. 
+[channel#connect method](http://www.squaremobius.net/amqp.node/channel_api.html#connect). 
 
 The second is called `defaultServernameToHostname`. This property is meant to signal that the servername property on the
 socketoptions should be defaulted to the hostname from the url passed in. This is meant to simplify correctly configuring

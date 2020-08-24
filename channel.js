@@ -15,7 +15,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   //https://github.com/squaremo/amqp.node/issues/331
   //This implements the default parsing everyone expects without breaking the api
   if (defaultServernameToHostname) {
-    var host = URI.parse(url).host;
+    var host = uriJs.parse(url).host;
     socketOptions.servername = host;
   }
 

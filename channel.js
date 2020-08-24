@@ -2,12 +2,19 @@ var noop = function(){},
     util = require('util'),
     amqp = require('amqplib'),
     Promise = require('bluebird'),
-    simplify = require('./simplify');
+    simplify = require('./simplify'),
+    URI = require('uri-js');
 
-module.exports = function createChannel(url, assertions, log, connectionOptions){
+module.exports = function createChannel(url, assertions, log, connectionOptions, defaultServerToHostname){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
   connectionOptions = connectionOptions || {};
+  defaultServerToHostname = !!defaultServerToHostname;
+
+  if (defaultServerToHostname) {
+    var host = URI.parse(url).host;
+    connectionOptions.servername = host;
+  }
 
   return amqp.connect(url, connectionOptions).then(openChannel);
 

@@ -5,7 +5,8 @@
   "main": "channel.js",
   "dependencies": {
     "amqplib": "^0.3.2",
-    "bluebird": "^2.9.24"
+    "bluebird": "^2.9.24",
+    "uri-js": "^4.2.2"
   },
   "devDependencies": {
     "chai": "^2.2.0",
@@ -21,7 +22,7 @@
     "sinon-chai": "^2.7.0"
   },
   "scripts": {
-    "test": "mocha test",
+    "test": "node ./node_modules/mocha/bin/mocha test",
     "test-cov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/amqp.channel/index.html"
   },

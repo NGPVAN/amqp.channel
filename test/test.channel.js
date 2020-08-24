@@ -73,7 +73,7 @@ describe('Channel', function() {
 
     it('should connect to the correct RabbitMQ URL', function(){
       expect(connect).to.have.been.calledOnce
-        .and.to.have.been.calledWithExactly(amqpUrl);
+        .and.to.have.been.calledWithExactly(amqpUrl, {});
     });
 
     it('should create a Channel on the Connection', function(){
@@ -112,7 +112,7 @@ describe('Channel', function() {
 
     it('should connect to the correct RabbitMQ URL', function(){
       expect(connect).to.have.been.calledOnce
-        .and.to.have.been.calledWithExactly(amqpUrl);
+        .and.to.have.been.calledWithExactly(amqpUrl, {});
     });
 
     it('should create a Channel on the Connection', function(){

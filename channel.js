@@ -5,17 +5,17 @@ var noop = function(){},
     simplify = require('./simplify'),
     uriJs = require('uri-js');
 
-module.exports = function createChannel(url, assertions, log, socketOptions, defaultServerToHostname){
+module.exports = function createChannel(url, assertions, log, socketOptions, defaultServernameToHostname){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
   socketOptions = socketOptions || {};
-  defaultServerToHostname = !!defaultServerToHostname;
+  defaultServernameToHostname = !!defaultServernameToHostname;
 
   //SNI for TLS requires the servername be specified, see:
   //https://github.com/nodejs/node/issues/28167#issuecomment-500779815
   //https://github.com/squaremo/amqp.node/issues/331
   //This implements the default parsing everyone expects without breaking the api
-  if (defaultServerToHostname) {
+  if (defaultServernameToHostname) {
     var host = URI.parse(url).host;
     socketOptions.servername = host;
   }

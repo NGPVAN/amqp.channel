@@ -3,20 +3,24 @@ var noop = function(){},
     amqp = require('amqplib'),
     Promise = require('bluebird'),
     simplify = require('./simplify'),
-    URI = require('uri-js');
+    uriJs = require('uri-js');
 
-module.exports = function createChannel(url, assertions, log, connectionOptions, defaultServerToHostname){
+module.exports = function createChannel(url, assertions, log, socketOptions, defaultServerToHostname){
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
-  connectionOptions = connectionOptions || {};
+  socketOptions = socketOptions || {};
   defaultServerToHostname = !!defaultServerToHostname;
 
+  //SNI for TLS requires the servername be specified, see:
+  //https://github.com/nodejs/node/issues/28167#issuecomment-500779815
+  //https://github.com/squaremo/amqp.node/issues/331
+  //This implements the default parsing everyone expects without breaking the api
   if (defaultServerToHostname) {
     var host = URI.parse(url).host;
-    connectionOptions.servername = host;
+    socketOptions.servername = host;
   }
 
-  return amqp.connect(url, connectionOptions).then(openChannel);
+  return amqp.connect(url, socketOptions).then(openChannel);
 
   function openChannel(connection) {
     var amqp = require('url').parse(url);

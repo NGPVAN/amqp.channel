@@ -118,6 +118,21 @@ if (sent.ok) {
 }
 ```
 
+#### Expanded options
+
+amqp.channel supports two parameters meant to modify connection options passed on to amqplib.
+
+The first is an object called `socketOptions` is the equivalent to the same named property on the 
+[channel#connect method]()http://www.squaremobius.net/amqp.node/channel_api.html#connect. 
+
+The second is called `defaultServernameToHostname`. This property is meant to signal that the servername property on the
+socketoptions should be defaulted to the hostname from the url passed in. This is meant to simplify correctly configuring
+connections over TLS for SNI. See the following for more details:
+
+https://github.com/nodejs/node/issues/28167#issuecomment-500779815
+https://github.com/squaremo/amqp.node/issues/331
+
+
 ## Real World Example
 
 Say you wanted to listen to the `'foo'` exchange and send a different message to the `'bar'` queue every time the message's `baz` property contained the word `'qux'`.

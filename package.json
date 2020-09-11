@@ -5,8 +5,7 @@
   "main": "channel.js",
   "dependencies": {
     "amqplib": "^0.3.2",
-    "bluebird": "^2.9.24",
-    "uri-js": "^4.2.2"
+    "bluebird": "^2.9.24"
   },
   "devDependencies": {
     "chai": "^2.2.0",

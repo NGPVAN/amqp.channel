@@ -3,7 +3,7 @@ var noop = function(){},
     amqp = require('amqplib'),
     Promise = require('bluebird'),
     simplify = require('./simplify'),
-    uriJs = require('uri-js');
+    urlLib = require('url');
 
 module.exports = function createChannel(url, assertions, log, socketOptions, defaultServernameToHostname){
   assertions = assertions || {};
@@ -15,14 +15,14 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   //https://github.com/squaremo/amqp.node/issues/331
   //This implements the default parsing everyone expects without breaking the api
   if (defaultServernameToHostname) {
-    var host = uriJs.parse(url).host;
+    var host = urlLib.parse(url).host;
     socketOptions.servername = host;
   }
 
   return amqp.connect(url, socketOptions).then(openChannel);
 
   function openChannel(connection) {
-    var amqp = require('url').parse(url);
+    var amqp = urlLib.parse(url);
     var user = amqp.auth.split(':')[0];
     var close = function closeConnection(e){
       var close = Promise.resolve(connection.close());

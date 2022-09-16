@@ -1,10 +1,10 @@
 {
   "name": "amqp.channel",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A simplified way to setup an AMQP connection/channel with amqplib",
   "main": "channel.js",
   "dependencies": {
-    "amqplib": "^0.3.2",
+    "amqplib": "^0.10.3",
     "bluebird": "^2.9.24",
     "uri-js": "^4.2.2"
   },
@@ -27,7 +27,7 @@
     "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/amqp.channel/index.html"
   },
   "engines": {
-    "node": ">=0.10 <0.13 || ^1"
+    "node": ">=16"
   },
   "repository": {
     "type": "git",

@@ -20,7 +20,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   }
 
   function retryConnection(err) {
-    console.log(`AMQP channel error, retrying`, err);
+    console.log('AMQP channel error or disconnection, retrying', err);
     return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 60000));
 }
 

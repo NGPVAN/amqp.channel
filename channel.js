@@ -19,6 +19,16 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     socketOptions.servername = host;
   }
 
+  function onConnectionError(err, attempt = 0) {
+
+    if (attempt === 1) {
+      console.error('Maximum reconnect attempts exceeded.');
+      throw('Maximum reconnect attempts exceeded.');
+    }
+    console.log(`AMQP channel error, retrying`, err);
+    return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 60000));
+}
+
   return amqp.connect(url, socketOptions).then(openChannel);
 
   function openChannel(connection) {
@@ -28,9 +38,11 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
       var close = Promise.resolve(connection.close());
       return e ? close.throw(e) : /* istanbul ignore next */ close;
     };
-    log.info('Connected to %s as "%s"', amqp.host, user);
+    console.log('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
+    connection.once("close", onConnectionError);
+    connection.once("error", onConnectionError);
     return connection.createConfirmChannel().then(setupChannel).catch(close);
   }
 

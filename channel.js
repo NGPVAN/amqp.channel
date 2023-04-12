@@ -20,7 +20,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   }
 
   function retryConnection(err) {
-    console.log('AMQP channel error or disconnection, retrying', err);
+    log.info('AMQP channel error or disconnection, retrying', err);
     return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 60000));
 }
 
@@ -33,7 +33,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
       var close = Promise.resolve(connection.close());
       return e ? close.throw(e) : /* istanbul ignore next */ close;
     };
-    console.log('Connected to %s as "%s"', amqp.host, user);
+    log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
     connection.once("close", retryConnection);

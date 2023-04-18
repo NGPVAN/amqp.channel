@@ -81,7 +81,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     function returnChannelFactory() {
       console.info('- Channel setup complete');
       return function () {
-        return new Promise.resolve(simplify(channel));
+        return simplify(channel);
       }
     }
 

@@ -9,6 +9,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
   socketOptions = socketOptions || {};
+  var channelToReturn = null;
 
   //SNI for TLS requires the servername be specified, see:
   //https://github.com/nodejs/node/issues/28167#issuecomment-500779815
@@ -78,8 +79,9 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     }
 
     function returnChannelFactory() {
+      console.info('- Channel setup complete');
       return function () {
-        return simplify(channel);
+        return new Promise (simplify(channel));
       }
     }
 

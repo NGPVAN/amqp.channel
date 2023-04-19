@@ -22,9 +22,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
 
   function retryConnection(err) {
     console.info('AMQP channel error or disconnection, retrying', err);
-    setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 1000)
-    return simplify(channel)
-    //return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 1000));
+    return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 1000));
   }
 
   return amqp.connect(url, socketOptions).then(openChannel);
@@ -32,11 +30,11 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   function openChannel(connection) {
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
+    console.info('Connected to %s as "%s"', amqp.host, user);
     var close = function closeConnection(e) {
       var close = Promise.resolve(connection.close());
       return e ? close.throw(e) : /* istanbul ignore next */ close;
     };
-    console.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
     connection.once("close", retryConnection);
@@ -66,7 +64,9 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
       });
     }
 
-    return Promise.all(setup).then(returnChannelFactory, closeChannel);
+    return Promise.all(setup).then(function (){
+      channelToReturn = channel;
+    }).then(returnChannelFactory, closeChannel);
 
     function applyToChannel(method) {
       return function invocation(args) {
@@ -83,7 +83,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     function returnChannelFactory() {
       console.info('- Channel setup complete');
       return function () {
-        return simplify(channel);
+        return simplify(channelToReturn);
       }
     }
 

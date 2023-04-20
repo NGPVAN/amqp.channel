@@ -1,5 +1,10 @@
 # amqp.channel
 
+> **Warning**
+> As of 2023-04-20 this repository is Archived and in read-only mode. It will receive no further updates. <br />
+> As it is MIT licensed, anyone is welcome to fork this repo under the terms of that license. <br />
+> Thanks to all past contributors!
+
 [![Build Status][travis-image]][travis-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 

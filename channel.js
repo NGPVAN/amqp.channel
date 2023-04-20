@@ -9,6 +9,7 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
   assertions = assertions || {};
   log = log || { info: noop, warn: noop, error: noop };
   socketOptions = socketOptions || {};
+  var channelToReturn = null;
 
   //SNI for TLS requires the servername be specified, see:
   //https://github.com/nodejs/node/issues/28167#issuecomment-500779815
@@ -19,18 +20,25 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     socketOptions.servername = host;
   }
 
+  function retryConnection(err) {
+    console.info('AMQP channel error or disconnection, retrying', err);
+    return new Promise(setTimeout(() => amqp.connect(url, socketOptions).then(openChannel), 5000));
+  }
+
   return amqp.connect(url, socketOptions).then(openChannel);
 
   function openChannel(connection) {
     var amqp = require('url').parse(url);
     var user = amqp.auth.split(':')[0];
+    log.info('Connected to %s as "%s"', amqp.host, user);
     var close = function closeConnection(e){
       var close = Promise.resolve(connection.close());
       return e ? close.throw(e) : /* istanbul ignore next */ close;
     };
-    log.info('Connected to %s as "%s"', amqp.host, user);
     process.once('SIGINT', close);
     process.once('SIGTERM', close);
+    connection.once("close", retryConnection);
+    connection.once("error", retryConnection);
     return connection.createConfirmChannel().then(setupChannel).catch(close);
   }
 
@@ -56,7 +64,9 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
       });
     }
 
-    return Promise.all(setup).then(returnChannel, closeChannel);
+    return Promise.all(setup).then(function (){
+      channelToReturn = channel;
+    }).then(returnChannelFactory, closeChannel);
 
     function applyToChannel(method){
       return function invocation(args){
@@ -68,6 +78,13 @@ module.exports = function createChannel(url, assertions, log, socketOptions, def
     function returnChannel(){
       log.info('- Channel setup complete');
       return simplify(channel);
+    }
+
+     function returnChannelFactory() {
+      console.info('- Channel setup complete');
+      return function () {
+        return simplify(channelToReturn);
+      }
     }
 
     function closeChannel(error){
